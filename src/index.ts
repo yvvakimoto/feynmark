@@ -41,4 +41,4 @@ export function render(source: string, opts: RenderOptions = {}): RenderedDiagra
   return model.diagrams.map((d) => renderDiagram(d, opts));
 }
 
-export const VERSION = '0.1.0';
+export const VERSION = '0.2.0';

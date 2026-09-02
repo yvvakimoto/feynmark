@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## 0.2.0 — 2026-09-02
+
 ### Added
 
 - **DSL** — `brace [<attrs>] v1, v2, ...` draws a bracket alongside a group of
@@ -68,4 +70,5 @@ First public release.
 - **Site** — overview, live editor and 47-example gallery, deployed to GitHub
   Pages from `site/`.
 
-[Unreleased]: https://github.com/yvvakimoto/feynmark/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/yvvakimoto/feynmark/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/yvvakimoto/feynmark/compare/v0.1.0...v0.2.0

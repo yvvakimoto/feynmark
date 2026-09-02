@@ -1,6 +1,6 @@
 {
   "name": "feynmark",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Mermaid-style declarative Feynman diagram renderer for markdown code blocks, with KaTeX labels and diagrams-as-terms in equations.",
   "keywords": [
     "feynman",
