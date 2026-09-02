@@ -53,7 +53,15 @@ export interface VertexStmt {
   loc: Loc;
 }
 
-export type Stmt = ChainStmt | DeclStmt | VertexStmt;
+export interface BraceStmt {
+  kind: 'brace';
+  attrs: Attr[];
+  /** Vertex names the bracket spans, in source order. */
+  members: string[];
+  loc: Loc;
+}
+
+export type Stmt = ChainStmt | DeclStmt | VertexStmt | BraceStmt;
 
 export interface DiagramNode {
   kind: 'diagram';
