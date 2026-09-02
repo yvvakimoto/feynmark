@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Layout** — external legs no longer topple over onto the flow axis. The
+  length-equalization pass could push a leg's inner vertex almost straight
+  under its pin, so the leg left the diagram perpendicular to the flow and read
+  as a kink rather than a leg (visible on the `penguin` gallery example, whose
+  outgoing `s` came out vertical). Legs pinned by default now stay within 60° of
+  the flow direction; `at (x, y)` placements are still taken literally.
+
 ## 0.1.0 — 2026-09-02
 
 First public release.

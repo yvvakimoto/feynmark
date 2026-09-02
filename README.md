@@ -141,8 +141,11 @@ equation <name>? [height=6]? {
 
 External legs are pinned to the borders (`in` left, `out` right, declaration
 order top-to-bottom); internal vertices minimize Σ tension·|Δp|² — the feynMF
-algorithm, solved exactly and deterministically. Same input, same diagram,
-every time. Escape hatches: `tension=`, explicit `at (x, y)`, `bend`.
+algorithm, solved exactly and deterministically. A relaxation pass then evens
+out the propagator lengths, holding every external leg within 60° of the flow
+direction so that a leg cannot topple over and read as a kink in the line it
+joins. Same input, same diagram, every time. Escape hatches: `tension=`,
+explicit `at (x, y)` (which also lifts the leg-angle limit), `bend`.
 
 ## API
 
