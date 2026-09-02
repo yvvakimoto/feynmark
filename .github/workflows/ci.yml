@@ -18,4 +18,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+      # cdn/ is committed and served by jsDelivr, so a stale copy ships to users.
+      - run: npm run check:cdn
       - run: npm run build:site

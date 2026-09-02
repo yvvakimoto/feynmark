@@ -36,7 +36,10 @@ First public release.
   `renderDiagram`, `renderEquationInto`) and `FeynmarkError` with source
   positions.
 - **Distribution** — ESM, CJS and IIFE (`window.feynmark`) builds with
-  TypeScript declarations; KaTeX as an optional peer dependency.
+  TypeScript declarations; KaTeX as an optional peer dependency. The standalone
+  bundle is served by jsDelivr from the tagged commit
+  (`cdn.jsdelivr.net/gh/yvvakimoto/feynmark@v0.1.0/cdn/feynmark.min.js`), which
+  is why `cdn/` is committed.
 - **Site** — overview, live editor and 47-example gallery, deployed to GitHub
   Pages from `site/`.
 

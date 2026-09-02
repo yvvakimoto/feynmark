@@ -13,8 +13,8 @@ npm test            # vitest
 npm run build       # tsup -> dist/
 ```
 
-CI runs exactly these four, plus `npm run build:site`, on every push and pull
-request. Please make sure they pass locally first.
+CI runs exactly these, plus `npm run check:cdn` and `npm run build:site`, on
+every push and pull request. Please make sure they pass locally first.
 
 ## The source tree
 
@@ -64,6 +64,23 @@ published site is rebuilt from source by `.github/workflows/pages.yml`.
 
 ## Releasing
 
-Bump the version in `package.json` and `src/index.ts`, update
-[CHANGELOG.md](CHANGELOG.md), then push a `v*` tag. `.github/workflows/release.yml`
-runs the tests and publishes to npm (needs the `NPM_TOKEN` repository secret).
+Distribution is jsDelivr's GitHub endpoint: it serves the tagged commit out of
+this repository, so a release is a verified tag — nothing is uploaded anywhere.
+
+1. Bump the version in `package.json` **and** `src/index.ts`
+   (`test/package.test.ts` checks they agree).
+2. `npm run build && npm run sync:cdn`, and commit `cdn/`.
+3. Update [CHANGELOG.md](CHANGELOG.md).
+4. Push a `v<version>` tag.
+
+`.github/workflows/release.yml` then re-checks that the tag matches
+`package.json`, that the tests pass, and that `cdn/` is not stale, and creates
+the GitHub Release. The new tag is live on jsDelivr immediately:
+
+```
+https://cdn.jsdelivr.net/gh/yvvakimoto/feynmark@v<version>/cdn/feynmark.min.js
+```
+
+Publishing to npm as well would only need an `NPM_TOKEN` secret and an
+`npm publish --provenance --access public` step; the `package.json` metadata
+(`exports`, `files`, `unpkg`, `jsdelivr`) is already set up for it.

@@ -28,7 +28,7 @@ diagram tree {
 ```html
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/feynmark/dist/feynmark.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/gh/yvvakimoto/feynmark@v0.1.0/cdn/feynmark.min.js"></script>
 ```
 
 On `DOMContentLoaded`, feynmark scans the page for
@@ -38,19 +38,24 @@ On `DOMContentLoaded`, feynmark scans the page for
 
 and replaces each with its rendered diagrams.
 
-> **Not on npm yet.** The CDN and `npm install` lines above start working with
-> the first release: pushing a `v*` tag runs
-> [`release.yml`](.github/workflows/release.yml), which publishes the package.
-> Until then, clone the repo and `npm run build` to get `dist/feynmark.min.js`.
+### Versions
 
-### ESM / bundlers
+feynmark is distributed through jsDelivr's GitHub endpoint, which serves the
+tagged commit directly from this repository — there is no package registry in
+the path, which is why [`cdn/`](cdn/) is the one build output that *is*
+committed.
 
-```bash
-npm install feynmark katex
-```
+| URL | resolves to |
+| --- | --- |
+| `.../feynmark@v0.1.0/cdn/feynmark.min.js` | exactly that release — **use this in production** |
+| `.../feynmark@0.1/cdn/feynmark.min.js` | the newest `0.1.x` tag |
+| `.../feynmark@main/cdn/feynmark.min.js` | whatever is on `main` (cached ~12 h; don't ship this) |
+
+Not on npm: `npm install feynmark` does not work yet. To use feynmark from a
+bundler today, clone the repo and `npm run build`, then import from `dist/`.
 
 ```js
-import { render, renderInto, initialize, run } from 'feynmark';
+import { render, renderInto, initialize, run } from './feynmark/dist/index.js';
 
 // String pipeline (no DOM):
 const [diagram] = render(source);
@@ -168,7 +173,13 @@ npm install
 npm run typecheck   # tsc --noEmit
 npm test            # vitest: parser / layout / stroke-geometry / DOM suites
 npm run build       # tsup: ESM + CJS + IIFE bundles into dist/
+npm run sync:cdn    # refresh the committed cdn/ bundle from dist/
 ```
+
+`dist/` is gitignored; [`cdn/`](cdn/) is not, because jsDelivr serves it from
+the repository. CI runs `npm run check:cdn`, which fails if the committed
+bundle differs from a fresh build — so rerun `sync:cdn` and commit whenever you
+change `src/`.
 
 The demo site under [`site/`](site/) is assembled into `_site/` together with
 the freshly built bundle and a vendored copy of KaTeX:

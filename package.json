@@ -45,6 +45,8 @@
   ],
   "scripts": {
     "build": "tsup",
+    "sync:cdn": "node scripts/sync-cdn.mjs",
+    "check:cdn": "node scripts/sync-cdn.mjs --check",
     "build:site": "node scripts/build-site.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

@@ -163,7 +163,7 @@ equation amp {
   <p class="lede">Drop in the script tags and write a <code>feynman</code> code block. feynmark renders every match on <code>DOMContentLoaded</code>.</p>
 <pre class="code"><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css"&gt;
 &lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"&gt;&lt;/script&gt;
-&lt;script defer src="https://cdn.jsdelivr.net/npm/feynmark/dist/feynmark.min.js"&gt;&lt;/script&gt;
+&lt;script defer src="https://cdn.jsdelivr.net/gh/yvvakimoto/feynmark@v0.1.0/cdn/feynmark.min.js"&gt;&lt;/script&gt;
 
 &lt;pre&gt;&lt;code class="language-feynman"&gt;
 diagram {
@@ -174,8 +174,9 @@ diagram {
 }
 &lt;/code&gt;&lt;/pre&gt;</code></pre>
   <p class="lede" style="margin-top:1rem">
-    Or from npm: <code>npm install feynmark katex</code>, then
-    <code>import { render, renderInto, initialize, run } from 'feynmark'</code>.
+    feynmark is served by jsDelivr straight from the tagged commit, so pin a tag
+    (<code>@v0.1.0</code>) in production; <code>@0.1</code> follows the newest patch release.
+    It is not on npm yet — for a bundler, clone the repo and <code>npm run build</code>.
     The <a href="https://github.com/yvvakimoto/feynmark#readme">README</a> has the full API.
   </p>
 </section>

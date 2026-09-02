@@ -1,25 +1,49 @@
 name: Release
 
+# jsDelivr serves the tagged commit straight out of the repository
+# (cdn.jsdelivr.net/gh/yvvakimoto/feynmark@<tag>/cdn/feynmark.min.js), so a
+# release is just a verified tag plus a GitHub Release for the notes.
+
 on:
   push:
     tags: ['v*']
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
+      contents: write # create the GitHub Release
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-          registry-url: https://registry.npmjs.org
+
+      # A tag that disagrees with package.json makes every version-pinned CDN
+      # URL point at a bundle whose reported VERSION is something else.
+      - name: Check the tag matches package.json
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg"
+            exit 1
+          fi
+
       - run: npm ci
+      - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npm publish --provenance --access public
+
+      # The whole point of the tag is the bundle it serves.
+      - run: npm run check:cdn
+
+      - name: Create the GitHub Release
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            cdn/feynmark.min.js
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
