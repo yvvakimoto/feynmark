@@ -128,4 +128,33 @@ describe('layoutDiagram', () => {
     const m1 = pair[1]!.path.point(pair[1]!.path.length / 2);
     expect(Math.hypot(m0.x - m1.x, m0.y - m1.y)).toBeGreaterThan(5);
   });
+
+  const penguin = (opts = '') => `diagram${opts} {
+      in  b: $b$
+      out s: $s$, ph: $\\gamma$
+      b  -- [fermion] v1 -- [fermion] v3
+      v3 -- [fermion] v2 -- [fermion] s
+      v1 -- [boson, bend left=70, tension=0.35] v2
+      v3 -- [photon] ph
+    }`;
+
+  it('keeps external legs off the vertical (penguin)', () => {
+    const { layout } = lay(penguin());
+    const s = layout.positions.get('s')!;
+    const v2 = layout.positions.get('v2')!;
+    // The out-leg used to leave straight up out of v2; it must now lean no
+    // more than 60° off the flow axis, and still point downstream.
+    expect(s.x).toBeGreaterThan(v2.x);
+    const lean = Math.abs(Math.atan2(s.y - v2.y, s.x - v2.x));
+    expect(lean).toBeLessThanOrEqual((60 * Math.PI) / 180 + 1e-6);
+  });
+
+  it('applies the leg-angle limit along the flow axis (direction=down)', () => {
+    const { layout } = lay(penguin(' [direction=down]'));
+    const s = layout.positions.get('s')!;
+    const v2 = layout.positions.get('v2')!;
+    expect(s.y).toBeGreaterThan(v2.y);
+    const lean = Math.abs(Math.atan2(s.x - v2.x, s.y - v2.y));
+    expect(lean).toBeLessThanOrEqual((60 * Math.PI) / 180 + 1e-6);
+  });
 });

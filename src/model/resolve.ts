@@ -1,9 +1,12 @@
 import { FeynmarkError } from '../errors';
-import type { Attr, AttrValue, DiagramNode, DocumentNode, EquationNode } from '../dsl/ast';
+import type { Attr, AttrValue, BraceStmt, DiagramNode, DocumentNode, EquationNode } from '../dsl/ast';
 import {
   EDGE_STYLES,
   defaultArrow,
   type ArrowMode,
+  type Brace,
+  type BraceShape,
+  type BraceSide,
   type DiagramModel,
   type DocumentModel,
   type Edge,
@@ -65,6 +68,7 @@ function resolveDiagram(node: DiagramNode, source?: string): DiagramModel {
     name: node.name,
     vertices: new Map(),
     edges: [],
+    braces: [],
     options: { direction: 'right', scale: 1 },
   };
 
@@ -100,6 +104,7 @@ function resolveDiagram(node: DiagramNode, source?: string): DiagramModel {
 
   let inCount = 0;
   let outCount = 0;
+  const braceStmts: BraceStmt[] = [];
 
   for (const stmt of node.stmts) {
     if (stmt.kind === 'decl') {
@@ -116,6 +121,10 @@ function resolveDiagram(node: DiagramNode, source?: string): DiagramModel {
       const v = ensureVertex(stmt.name);
       if (stmt.at) v.pin = stmt.at;
       applyVertexAttrs(v, stmt.attrs, source);
+    } else if (stmt.kind === 'brace') {
+      // Members are validated after every statement is in, so a bracket may
+      // be written above the chains it gathers.
+      braceStmts.push(stmt);
     } else {
       for (let i = 0; i < stmt.edges.length; i++) {
         const fromNode = stmt.nodes[i]!;
@@ -129,6 +138,10 @@ function resolveDiagram(node: DiagramNode, source?: string): DiagramModel {
     }
   }
 
+  for (const stmt of braceStmts) {
+    model.braces.push(resolveBrace(stmt, model, source));
+  }
+
   if (model.vertices.size === 0) {
     throw new FeynmarkError(`diagram${node.name ? ` '${node.name}'` : ''} is empty`, node.loc, source);
   }
@@ -137,6 +150,66 @@ function resolveDiagram(node: DiagramNode, source?: string): DiagramModel {
   }
 
   return model;
+}
+
+const BRACE_SIDES = new Set<string>(['left', 'right', 'top', 'bottom']);
+
+/**
+ * Resolve one `brace [...] a, b, c` statement. The side defaults to the edge
+ * of the frame the members live on (`in` legs bracket on the left, `out` legs
+ * on the right); a mixed or internal group defaults to `left`.
+ */
+function resolveBrace(stmt: BraceStmt, model: DiagramModel, source?: string): Brace {
+  let side: BraceSide | undefined;
+  let shape: BraceShape = 'brace';
+  let label: { tex: string } | undefined;
+
+  for (const attr of stmt.attrs) {
+    if (BRACE_SIDES.has(attr.key)) {
+      if (side) throw new FeynmarkError(`brace has two sides: '${side}' and '${attr.key}'`, attr.loc, source);
+      side = attr.key as BraceSide;
+      continue;
+    }
+    switch (attr.key) {
+      case 'paren':
+        shape = 'paren';
+        break;
+      case 'label': {
+        const tex = texValue(attr.value);
+        if (!tex) throw new FeynmarkError(`label expects a value`, attr.loc, source);
+        label = { tex };
+        break;
+      }
+      default:
+        throw new FeynmarkError(`unknown brace attribute '${attr.key}'`, attr.loc, source);
+    }
+  }
+
+  const seen = new Set<string>();
+  for (const name of stmt.members) {
+    const v = model.vertices.get(name);
+    if (!v) {
+      throw new FeynmarkError(
+        `brace refers to unknown vertex '${name}' — a bracket gathers vertices that ` +
+          `already appear in the diagram`,
+        stmt.loc,
+        source,
+      );
+    }
+    if (seen.has(name)) {
+      throw new FeynmarkError(`brace lists vertex '${name}' twice`, stmt.loc, source);
+    }
+    seen.add(name);
+  }
+  if (stmt.members.length < 2) {
+    throw new FeynmarkError(`brace needs at least two vertices`, stmt.loc, source);
+  }
+
+  if (!side) {
+    const dirs = new Set(stmt.members.map((n) => model.vertices.get(n)!.external));
+    side = dirs.size === 1 && dirs.has('out') ? 'right' : 'left';
+  }
+  return { members: stmt.members, side, shape, label };
 }
 
 function applyVertexAttrs(v: Vertex, attrs: Attr[], source?: string): void {

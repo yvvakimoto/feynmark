@@ -3,6 +3,7 @@ import { buildEdgeGeometries } from '../layout/edges';
 import { BASE_EDGE_LEN, layoutDiagram } from '../layout/layout';
 import { ArcPath, norm, sub, type Path, type Vec2 } from '../layout/geometry';
 import { arrowheadAt, momentumArrow } from './arrows';
+import { braceGeometry } from './braces';
 import {
   DomLabelMeasurer,
   HeuristicLabelMeasurer,
@@ -108,6 +109,8 @@ interface PlacedLabel {
   cssClass: string;
   /** Unit direction the label may retreat along if it collides. */
   escape: Vec2;
+  /** Vertex this label belongs to — a bracket has to clear its members' labels. */
+  ownerId?: string;
 }
 
 /** Render one diagram model to a self-contained SVG string. */
@@ -129,6 +132,7 @@ export function renderDiagram(model: DiagramModel, opts: RenderOptions = {}): Re
       padding: m.padding * f,
       labelFontSize: m.labelFontSize * Math.max(0.85, f),
       labelSep: m.labelSep * Math.max(0.7, f),
+      braceDepth: m.braceDepth * Math.max(0.7, f),
       wavelength: m.wavelength * fw,
       coilWavelength: m.coilWavelength * fw,
       waveAmplitude: m.waveAmplitude * Math.max(0.85, f),
@@ -281,6 +285,7 @@ export function renderDiagram(model: DiagramModel, opts: RenderOptions = {}): Re
         size,
         cssClass: 'fm-vlabel',
         escape: dir,
+        ownerId: v.id,
       });
     }
   }
@@ -288,6 +293,50 @@ export function renderDiagram(model: DiagramModel, opts: RenderOptions = {}): Re
   resolveLabelCollisions(labels, m);
   resolveInkCollisions(labels, inkPts, m);
   resolveLabelCollisions(labels, m);
+
+  // Hadron brackets come last: they must clear the members' own labels, which
+  // are only in their final places once the collision passes have run.
+  const braceParts: string[] = [];
+  if (model.braces.length > 0) {
+    const labelOf = new Map<string, PlacedLabel>();
+    for (const l of labels) if (l.ownerId) labelOf.set(l.ownerId, l);
+    for (const brace of model.braces) {
+      const pts: Vec2[] = [];
+      for (const id of brace.members) {
+        const p = layout.positions.get(id)!;
+        const ext = glyphExtent(model.vertices.get(id)!, m);
+        pts.push({ x: p.x - ext, y: p.y - ext }, { x: p.x + ext, y: p.y + ext });
+        const l = labelOf.get(id);
+        if (l) {
+          pts.push(
+            { x: l.cx - l.size.width / 2, y: l.cy - l.size.height / 2 },
+            { x: l.cx + l.size.width / 2, y: l.cy + l.size.height / 2 },
+          );
+        }
+      }
+      const g = braceGeometry(bounds(pts, 0), brace.side, brace.shape, m);
+      braceParts.push(
+        `<path class="fm-brace" d="${g.d}" ` +
+          `style="fill:none;stroke:currentColor;stroke-width:${fmt(m.strokeWidth * 0.9)}px;` +
+          `stroke-linecap:round;stroke-linejoin:round"/>`,
+      );
+      boundPts.push(...g.bounds);
+      if (brace.label) {
+        const size = measurer.measure(brace.label.tex, m.labelFontSize);
+        const nrm = g.labelNormal;
+        const proj = Math.abs(nrm.x) * (size.width / 2) + Math.abs(nrm.y) * (size.height / 2);
+        labels.push({
+          tex: brace.label.tex,
+          cx: g.labelAnchor.x + nrm.x * proj,
+          cy: g.labelAnchor.y + nrm.y * proj,
+          size,
+          cssClass: 'fm-label fm-brace-label',
+          escape: nrm,
+        });
+      }
+    }
+    resolveLabelCollisions(labels, m);
+  }
 
   const labelParts = labels.map((l) =>
     labelMarkup(l.tex, l.cx, l.cy, l.size, m.labelFontSize, katex, l.cssClass),
@@ -333,6 +382,7 @@ export function renderDiagram(model: DiagramModel, opts: RenderOptions = {}): Re
     `<g class="fm-edges">${edgeParts.join('')}</g>` +
     `<g class="fm-overlays">${overlayParts.join('')}</g>` +
     `<g class="fm-vertices">${glyphParts.join('')}</g>` +
+    `<g class="fm-braces">${braceParts.join('')}</g>` +
     `<g class="fm-labels">${labelParts.join('')}</g>` +
     `</svg>`;
 

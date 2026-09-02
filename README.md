@@ -88,6 +88,7 @@ diagram <name>? [<options>]? {
   out c, d: $\mu^+$      % external legs exiting to the right
   vertex v [blob]        % optional vertex declarations
   a -- [fermion] v -- [photon, momentum=$q$] c   % edge chains
+  brace [label=$p$] a, b % bracket a group of lines as one hadron
 }
 
 equation <name>? [height=6]? {
@@ -133,6 +134,35 @@ equation <name>? [height=6]? {
 `dot`, `blob` (`blob=shade`), `cross` (counterterm ⊗), `square`,
 `label=$..$`, `size=n`, and `at (x, y)` for explicit placement (y-up).
 
+### Hadron brackets
+
+`brace [<attrs>] v1, v2, ...` draws a bracket alongside a group of vertices —
+the hadron idiom, where three tight quark lines are gathered under a `p`.
+
+```feynman
+diagram betaquark {
+  in  u1, d1, d2
+  out u2, d3, u3, ne: $ar
+u_e$, e: $e^-$
+  ...
+  brace [label=$n$] u1, d1, d2
+  brace [label=$p$] u2, d3, u3
+}
+```
+
+| attribute | meaning |
+| --- | --- |
+| `left`, `right`, `top`, `bottom` | which side of the group to bracket |
+| `paren` | draw `(` instead of the default `{` |
+| `label=$..$` | label placed outside the bracket tip |
+
+The side defaults to the edge the members sit on: a group of `out` legs
+brackets on the right, anything else on the left. Brackets are decoration —
+they never move a vertex — but they do claim room, and each one is placed clear
+of its own members' labels, so `brace` on labelled legs pushes out far enough to
+sit outside them. A bracket needs at least two vertices, and every member must
+already appear in the diagram.
+
 ### Diagram options
 
 `direction=right|left|down|up`, `scale=n`, `baseline=<vertex>`.
@@ -141,8 +171,11 @@ equation <name>? [height=6]? {
 
 External legs are pinned to the borders (`in` left, `out` right, declaration
 order top-to-bottom); internal vertices minimize Σ tension·|Δp|² — the feynMF
-algorithm, solved exactly and deterministically. Same input, same diagram,
-every time. Escape hatches: `tension=`, explicit `at (x, y)`, `bend`.
+algorithm, solved exactly and deterministically. A relaxation pass then evens
+out the propagator lengths, holding every external leg within 60° of the flow
+direction so that a leg cannot topple over and read as a kink in the line it
+joins. Same input, same diagram, every time. Escape hatches: `tension=`,
+explicit `at (x, y)` (which also lifts the leg-angle limit), `bend`.
 
 ## API
 

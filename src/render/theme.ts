@@ -17,6 +17,8 @@ export interface Metrics {
   blobRadius: number;
   crossRadius: number;
   squareHalf: number;
+  /** Depth of a hadron bracket from its arm plane to its tip. */
+  braceDepth: number;
   labelSep: number;
   labelFontSize: number;
   momentumSep: number;
@@ -39,6 +41,7 @@ export function metrics(scale: number): Metrics {
     blobRadius: 13 * s,
     crossRadius: 6.5 * s,
     squareHalf: 5.5 * s,
+    braceDepth: 7 * s,
     labelSep: 5.5 * s,
     labelFontSize: 15 * s,
     momentumSep: 12 * s,

@@ -3,6 +3,7 @@ import type {
   Attr,
   AttrValue,
   Block,
+  BraceStmt,
   ChainNode,
   ChainStmt,
   DeclItem,
@@ -137,6 +138,12 @@ class Parser {
       const nxt = this.peek();
       if (nxt.type === 'ident') return this.parseVertexDef();
     }
+    if (this.tok.type === 'ident' && this.tok.value === 'brace') {
+      // A chain would need '--' next, so 'brace' followed by a name or an
+      // attribute list can only be a bracket statement.
+      const nxt = this.peek();
+      if (nxt.type === 'ident' || (nxt.type === 'punct' && nxt.value === '[')) return this.parseBrace();
+    }
     return this.parseChain();
   }
 
@@ -182,6 +189,24 @@ class Parser {
       at = this.parseCoord();
     }
     return { kind: 'vertex', name, attrs, at, loc };
+  }
+
+  private parseBrace(): BraceStmt {
+    const loc = this.tok.loc;
+    this.bump(); // 'brace'
+    let attrs: Attr[] = [];
+    if (this.isPunct('[')) attrs = this.parseAttrs();
+    const members: string[] = [];
+    for (;;) {
+      if (this.tok.type !== 'ident') this.fail(`expected vertex name but found ${describe(this.tok)}`);
+      members.push(this.tok.value);
+      this.bump();
+      if (this.isPunct(',')) {
+        this.bump();
+        this.skipNewlines();
+      } else break;
+    }
+    return { kind: 'brace', attrs, members, loc };
   }
 
   private parseCoord(): { x: number; y: number } {

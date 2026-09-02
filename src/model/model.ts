@@ -75,6 +75,22 @@ export interface Edge {
   width?: number;
 }
 
+export type BraceSide = 'left' | 'right' | 'top' | 'bottom';
+
+export type BraceShape = 'brace' | 'paren';
+
+/**
+ * A bracket drawn alongside a group of vertices — the hadron idiom: three
+ * quark lines gathered under a `p`. Purely decorative: braces never move a
+ * vertex, they only widen the bounding box.
+ */
+export interface Brace {
+  members: string[];
+  side: BraceSide;
+  shape: BraceShape;
+  label?: { tex: string };
+}
+
 export interface DiagramOptions {
   direction: 'right' | 'left' | 'down' | 'up';
   scale: number;
@@ -86,6 +102,7 @@ export interface DiagramModel {
   name?: string;
   vertices: Map<string, Vertex>;
   edges: Edge[];
+  braces: Brace[];
   options: DiagramOptions;
 }
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gallery — feynmark</title>
-<meta name="description" content="Forty-odd worked feynmark examples: QED trees, propagator styles, QCD and electroweak processes, loops, BSM, vertex types, layout control and diagrams embedded in equations.">
+<meta name="description" content="Sixty-odd worked feynmark examples: QED trees, propagator styles, QCD and electroweak processes, quark- and hadron-level diagrams, one-loop and multi-loop topologies, BSM, vertex types, layout control and diagrams embedded in equations.">
 <link rel="stylesheet" href="vendor/katex/katex.min.css">
 <link rel="stylesheet" href="assets/site.css">
 <script defer src="vendor/katex/katex.min.js"></script>
@@ -60,12 +60,14 @@
     <a href="#qed">QED tree level</a>
     <a href="#styles">Propagator styles</a>
     <a href="#ewk">QCD &amp; electroweak</a>
+    <a href="#hadrons">Quarks &amp; hadrons</a>
     <a href="#loops">One-loop</a>
-    <a href="#multiloop">Multi-loop</a>
+    <a href="#multiloop">Multi-loop &amp; multi-leg</a>
     <a href="#bsm">Beyond the SM</a>
     <a href="#vertices">Vertex types</a>
     <a href="#layout">Layout control</a>
     <a href="#equations">Equation embedding</a>
+    <a href="#errors">Error reporting</a>
   </aside>
 
   <main>
@@ -233,6 +235,170 @@ diagram zdecay [direction=down] {
 </figure>
 </div>
 
+<h2 id="hadrons">Quarks &amp; hadrons</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram betaquark {
+  in  u1, d1, d2
+  out u2, d3, u3, ne: $\bar\nu_e$, e: $e^-$
+  vertex u1 at (0, 0.57);   vertex d1 at (0, 0.5);   vertex d2 at (0, 0.43)
+  vertex u2 at (1.5, 0.57); vertex d3 at (1.5, 0.5); vertex u3 at (1.5, 0.43)
+  vertex ne at (1.5, 0.04); vertex e  at (1.5, -0.48)
+  u1 -- [fermion, arrow=none] s1 at (0.5, 0.57) -- [fermion] u2
+  d1 -- [fermion] s2 at (0.75, 0.5) -- [fermion, arrow=none] d3
+  d2 -- [fermion, label'=$d$] w1 at (0.5, 0.43) -- [fermion, label'=$u$] u3
+  w1 -- [boson, label'=$W^-$] w2 at (0.95, -0.1)
+  ne -- [fermion] w2 -- [fermion] e
+  brace [label=$n$] u1, d1, d2
+  brace [label=$p$] u2, d3, u3
+}
+</code></pre>
+<figcaption>β⁻ decay at quark level: a d in the neutron turns into a u</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram lambdadecay {
+  in  u1, d1, s
+  out u2, d2, u3, db, ub
+  vertex u1 at (0, 0.57);   vertex d1 at (0, 0.5);   vertex s  at (0, 0.43)
+  vertex u2 at (1.5, 0.57); vertex d2 at (1.5, 0.5); vertex u3 at (1.5, 0.43)
+  vertex db at (1.5, 0.06); vertex ub at (1.5, -0.34)
+  u1 -- [fermion, arrow=none] t1 at (0.5, 0.57) -- [fermion] u2
+  d1 -- [fermion] t2 at (0.75, 0.5) -- [fermion, arrow=none] d2
+  s -- [fermion, label'=$s$] w1 at (0.5, 0.43) -- [fermion, label'=$u$] u3
+  w1 -- [boson, label'=$W^-$] w2 at (0.95, -0.04)
+  ub -- [fermion] w2 -- [fermion] db
+  brace [label=$\Lambda^0$] u1, d1, s
+  brace [label=$p$] u2, d2, u3
+  brace [right, label=$\pi^-$] db, ub
+}
+</code></pre>
+<figcaption>Λ⁰(uds) → p π⁻ via s → u W⁻, W⁻ → d ū</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram pnscatter {
+  in  pu1, pu2, pd, nu, nd1, nd2
+  out qu1, qu2, qd, ru, rd1, rd2
+  vertex pu1 at (0, 0.62);    vertex pu2 at (0, 0.55);    vertex pd  at (0, 0.48)
+  vertex nu  at (0, -0.48);   vertex nd1 at (0, -0.55);   vertex nd2 at (0, -0.62)
+  vertex qu1 at (1.7, 0.62);  vertex qu2 at (1.7, 0.55);  vertex qd  at (1.7, 0.48)
+  vertex ru  at (1.7, -0.48); vertex rd1 at (1.7, -0.55); vertex rd2 at (1.7, -0.62)
+  pu1 -- [fermion, arrow=none] c1 at (0.5, 0.62) -- [fermion] qu1
+  pu2 -- [fermion] c2 at (1.1, 0.55) -- [fermion, arrow=none] qu2
+  pd  -- [fermion, color=steelblue] a at (0.65, 0.48)
+  a   -- [fermion, color=seagreen] qd
+  nu  -- [fermion, color=seagreen] b at (1.05, -0.48)
+  b   -- [fermion, color=steelblue] ru
+  nd1 -- [fermion] c3 at (1.1, -0.55) -- [fermion, arrow=none] rd1
+  nd2 -- [fermion, arrow=none] c4 at (0.5, -0.62) -- [fermion] rd2
+  a -- [gluon, label'=$g$] b
+  brace [label=$p$] pu1, pu2, pd
+  brace [label=$n$] nu, nd1, nd2
+  brace [right, label=$p$] qu1, qu2, qd
+  brace [right, label=$n$] ru, rd1, rd2
+}
+</code></pre>
+<figcaption>p–n scattering by one-gluon exchange — the two quarks swap colour</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram pionexchange {
+  in  pu1, pu2, pd, nd1, nd2, nu
+  out qu1, qu2, qd, ru, rd1, rd2
+  % A d from the proton goes down and a d from the neutron comes up: the two
+  % strands in the middle are the pion. Gluons tie each strand end to a quark
+  % that stays in its nucleon.
+  vertex pu1 at (0, 1.32);    vertex pu2 at (0, 1.17);    vertex pd  at (0, 1.02)
+  vertex qu1 at (2.6, 1.32);  vertex qu2 at (2.6, 1.17);  vertex qd  at (2.6, 1.02)
+  vertex nd1 at (0, -1.02);   vertex nd2 at (0, -1.17);   vertex nu  at (0, -1.32)
+  vertex ru  at (2.6, -1.02); vertex rd1 at (2.6, -1.17); vertex rd2 at (2.6, -1.32)
+  pu1 -- [fermion] a at (1.16, 1.0) -- [fermion] qu1
+  pu2 -- [fermion] c at (1.34, 0.7) -- [fermion] qu2
+  pd  -- [fermion] b at (1.16, 0.5) -- [fermion] e at (1.16, -0.32) -- [fermion] ru
+  nd1 -- [fermion] f at (1.34, -0.6) -- [fermion, arrow=none] m1 at (1.34, -0.24)
+  m1  -- [fermion] m2 at (1.34, 0.1) -- [fermion, arrow=none] d at (1.34, 0.3) -- [fermion] qd
+  nd2 -- [fermion] g at (1.16, -0.86) -- [fermion] rd1
+  nu  -- [fermion] h at (1.34, -1.1) -- [fermion] rd2
+  a -- [gluon] b;   c -- [gluon] d
+  e -- [gluon] g;   f -- [gluon] h
+  brace [label=$p$] pu1, pu2, pd
+  brace [label=$n$] nd1, nd2, nu
+  brace [right, label=$p$] qu1, qu2, qd
+  brace [right, label=$n$] ru, rd1, rd2
+  brace [right, label=$\pi^0$] m1, m2
+}
+</code></pre>
+<figcaption>one-pion exchange: a d from each nucleon crosses over as the π⁰, with gluons tying the pair into the nucleons</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram dis {
+  in  e1: $e^-$, u1, u2, d1
+  out e2: $e^-$, q1, s1, s2
+  vertex e1 at (0, 1);     vertex e2 at (1.6, 1)
+  vertex u1 at (0, 0.14);  vertex u2 at (0, 0.07);   vertex d1 at (0, 0)
+  vertex q1 at (1.6, 0.6); vertex s1 at (1.6, 0.07); vertex s2 at (1.6, 0)
+  e1 -- [fermion] v at (0.6, 1) -- [fermion] e2
+  v -- [photon, label'=$\gamma^*$] w at (0.8, 0.14)
+  u1 -- [fermion] w -- [fermion, label=$q$] q1
+  u2 -- [fermion, arrow=none] m1 at (1.05, 0.07) -- [fermion] s1
+  d1 -- [fermion] m2 at (0.55, 0) -- [fermion, arrow=none] s2
+  brace [label=$p$] u1, u2, d1
+  brace [right, paren, label=$X$] q1, s1, s2
+}
+</code></pre>
+<figcaption>deep inelastic scattering: γ* strikes one quark, the rest of the proton goes into X</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram piondecay {
+  in  d: $d$, ub: $\bar u$
+  out nu: $\bar\nu_\mu$, mu: $\mu^-$
+  d  -- [fermion] a -- [fermion] ub
+  a  -- [boson, label'=$W^-$, tension=0.7] b
+  nu -- [fermion] b -- [fermion] mu
+}
+</code></pre>
+<figcaption>π⁻ → μ⁻ ν̄<sub>μ</sub>: the (dū) pair annihilates into a W⁻</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram gsplit {
+  in  g1: $g$
+  out q: $q$, qb: $\bar q$
+  vertex v [dot]
+  g1 -- [gluon, momentum=$p$] v
+  v -- [fermion] q
+  qb -- [fermion] v
+}
+</code></pre>
+<figcaption>gluon splitting: g → q q̄</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram threejet {
+  in  e1: $e^-$, e2: $e^+$
+  out q: $q$, g: $g$, qb: $\bar q$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon, label=$\gamma^*$] b
+  qb -- [fermion] b -- [fermion] v
+  v -- [gluon, tension=0.7] g
+  v -- [fermion] q
+}
+</code></pre>
+<figcaption>three-jet event: e⁺e⁻ → q q̄ g</figcaption>
+</figure>
+</div>
+
 <h2 id="loops">One-loop</h2>
 <div class="grid">
 <figure>
@@ -381,18 +547,105 @@ diagram twotadpoles {
 <figcaption>double tadpole (auto loop directions)</figcaption>
 </figure>
 
-<figure>
+<figure class="wide">
 <pre><code class="language-feynman">
 diagram rainbow {
   in a: $e^-$; out b: $e^-$
-  a -- [fermion] v1 -- [fermion] v2
-  v2 -- [fermion] v3 -- [fermion] b
-  v1 -- [photon, bend left=75] v3
-  v2 -- [photon, bend left=75] b
-  ...
+  a -- [fermion] v1 -- [fermion] v2 -- [fermion, label'=$e$] v3 -- [fermion] v4 -- [fermion] b
+  v1 -- [photon, bend left=80, tension=0.4, label=$\gamma$] v4
+  v2 -- [photon, bend left=70, tension=0.6] v3
 }
 </code></pre>
-<figcaption>deliberately invalid — this is how errors are reported</figcaption>
+<figcaption>two-loop rainbow (nested self-energy)</figcaption>
+</figure>
+
+<figure class="wide">
+<pre><code class="language-feynman">
+diagram crossed {
+  in a: $e^-$; out b: $e^-$
+  a -- [fermion] v1 -- [fermion] v2 -- [fermion] v3 -- [fermion] v4 -- [fermion] b
+  v1 -- [photon, bend left=70, tension=0.5] v3
+  v2 -- [photon, bend left=70, tension=0.5, label=$\gamma$] v4
+}
+</code></pre>
+<figcaption>two-loop crossed (non-planar) self-energy</figcaption>
+</figure>
+
+<figure class="wide">
+<pre><code class="language-feynman">
+diagram ladder {
+  in  a: $e^-$, b: $e^-$
+  out c: $e^-$, d: $e^-$
+  a -- [fermion] u1 -- [fermion] u2 -- [fermion] u3 -- [fermion] c
+  b -- [fermion] l1 -- [fermion] l2 -- [fermion] l3 -- [fermion] d
+  u1 -- [photon] l1
+  u2 -- [photon, label=$\gamma$] l2
+  u3 -- [photon] l3
+}
+</code></pre>
+<figcaption>two-loop ladder: three rungs, two independent loops</figcaption>
+</figure>
+
+<figure class="wide">
+<pre><code class="language-feynman">
+diagram doublebubble {
+  in a: $\gamma$; out b: $\gamma$
+  a -- [photon] v1
+  v1 -- [fermion, half left, label=$e$] v2
+  v2 -- [fermion, half left] v1
+  v2 -- [photon] v3
+  v3 -- [fermion, half left, label=$e$] v4
+  v4 -- [fermion, half left] v3
+  v4 -- [photon] b
+}
+</code></pre>
+<figcaption>two-loop photon self-energy: two bubbles in series</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram twoloopvacpol {
+  in g1: $\gamma$; out g2: $\gamma$
+  vertex g1 at (0, 0); vertex g2 at (1.9, 0)
+  g1 -- [photon] a at (0.55, 0)
+  a -- [fermion, quarter left] c at (0.95, 0.4)
+  c -- [fermion, quarter left] b at (1.35, 0)
+  b -- [fermion, quarter left] d at (0.95, -0.4)
+  d -- [fermion, quarter left] a
+  c -- [photon, label'=$\gamma$] d
+  b -- [photon] g2
+}
+</code></pre>
+<figcaption>two-loop vacuum polarization: four quarter arcs make the circle</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram banana {
+  in a: $\phi$; out b: $\phi$
+  a -- [scalar] v1; v2 -- [scalar] b
+  v1 -- [scalar] v2
+  v1 -- [scalar] v2
+  v1 -- [scalar] v2
+  v1 -- [scalar] v2
+}
+</code></pre>
+<figcaption>three-loop banana: four parallel propagators, auto-fanned</figcaption>
+</figure>
+
+<figure class="wide">
+<pre><code class="language-feynman">
+diagram nestedqcd {
+  in a: $q$; out b: $q$
+  vertex a at (0, 0); vertex b at (2.2, 0)
+  a -- [fermion] v1 at (0.5, 0) -- [fermion, label'=$q$] v2 at (1.7, 0) -- [fermion] b
+  v1 -- [gluon] c at (0.85, 0.7)
+  c -- [fermion, half left, label=$q'$] d at (1.35, 0.7)
+  d -- [fermion, half left] c
+  d -- [gluon] v2
+}
+</code></pre>
+<figcaption>two-loop quark self-energy: a quark loop inside the gluon</figcaption>
 </figure>
 
 <figure class="wide">
@@ -584,6 +837,21 @@ equation dyson {
 }
 </code></pre>
 <figcaption>Dyson series: dressed propagator = Σ of insertions</figcaption>
+</figure>
+</div>
+
+<h2 id="errors">Error reporting</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram broken {
+  in a: $e^-$; out b: $e^-$
+  a -- [fermion] v1 -- [fermion] v2 -- [fermion] b
+  v1 -- [photon, bend left=75] v2
+  ...
+}
+</code></pre>
+<figcaption>invalid source — feynmark renders the parse error in place</figcaption>
 </figure>
 </div>
 

@@ -6,6 +6,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- **DSL** — `brace [<attrs>] v1, v2, ...` draws a bracket alongside a group of
+  vertices, so a bundle of tight quark lines reads as one hadron. Attributes:
+  `left` / `right` / `top` / `bottom` for the side (defaulting to the edge the
+  members sit on), `paren` for `(` instead of `{`, and `label=$..$`. Brackets
+  are decoration — they never move a vertex — and each is placed clear of its
+  own members' labels.
+- **Gallery** — a `Quarks & hadrons` section (β⁻ decay, Λ⁰ → p π⁻, p–n
+  scattering by gluon and by one-pion exchange, deep inelastic scattering,
+  π⁻ → μ⁻ ν̄, gluon splitting, three-jet) and six more multi-loop topologies
+  (rainbow, crossed, ladder, double bubble, two-loop vacuum polarization,
+  three-loop banana, nested QCD). The deliberately invalid `rainbow` example
+  became a real two-loop rainbow; the parse-error demo moved to its own
+  `Error reporting` section.
+
+### Fixed
+
+- **Layout** — external legs no longer topple over onto the flow axis. The
+  length-equalization pass could push a leg's inner vertex almost straight
+  under its pin, so the leg left the diagram perpendicular to the flow and read
+  as a kink rather than a leg (visible on the `penguin` gallery example, whose
+  outgoing `s` came out vertical). Legs pinned by default now stay within 60° of
+  the flow direction; `at (x, y)` placements are still taken literally.
+
 ## 0.1.0 — 2026-09-02
 
 First public release.

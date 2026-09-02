@@ -152,6 +152,40 @@ describe('resolver', () => {
     expect(model.diagrams[0]!.edges[0]!.bend).toBe(179);
   });
 
+  it('parses brace statements and infers the side from the members', () => {
+    const model = resolve(parse(`diagram {
+      in  u1, d1, d2
+      out u2, d3, u3
+      u1 -- u2; d1 -- d3; d2 -- u3
+      brace [label=$n$] u1, d1, d2
+      brace u2, d3, u3
+      brace [top, paren, label=$p$] u2, d3
+    }`));
+    const braces = model.diagrams[0]!.braces;
+    expect(braces).toHaveLength(3);
+    expect(braces[0]).toMatchObject({ members: ['u1', 'd1', 'd2'], side: 'left', shape: 'brace' });
+    expect(braces[0]!.label?.tex).toBe('n');
+    // No side given: all-`out` members bracket on the right.
+    expect(braces[1]).toMatchObject({ side: 'right', shape: 'brace', label: undefined });
+    expect(braces[2]).toMatchObject({ side: 'top', shape: 'paren' });
+  });
+
+  it('rejects malformed braces', () => {
+    const d = (body: string): string => `diagram { in a; out b; a -- b
+${body} }`;
+    expect(() => resolve(parse(d(`brace a, nope`)))).toThrow(/unknown vertex 'nope'/);
+    expect(() => resolve(parse(d(`brace a, a`)))).toThrow(/twice/);
+    expect(() => resolve(parse(d(`brace a`)))).toThrow(/at least two/);
+    expect(() => resolve(parse(d(`brace [left, right] a, b`)))).toThrow(/two sides/);
+    expect(() => resolve(parse(d(`brace [wibble] a, b`)))).toThrow(/unknown brace attribute/);
+  });
+
+  it('still treats brace as a vertex name in a chain', () => {
+    const model = resolve(parse(`diagram { in brace; out b; brace -- [fermion] b }`));
+    expect([...model.diagrams[0]!.vertices.keys()]).toEqual(['brace', 'b']);
+    expect(model.diagrams[0]!.braces).toHaveLength(0);
+  });
+
   it('rejects colors outside CSS color syntax', () => {
     expect(() =>
       resolve(parse(`diagram { in a; out b; a -- [color="red;fill:blue"] b }`)),

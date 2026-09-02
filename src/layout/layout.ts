@@ -102,8 +102,9 @@ export function layoutDiagram(model: DiagramModel, edgeLength?: number): VertexL
   // The harmonic solution fixes the topology but can leave very uneven edge
   // lengths (an external leg squeezed to nothing beside a long propagator).
   // Relax internal vertices toward uniform ideal lengths — deterministic
-  // stress majorization with the pins held fixed.
-  equalizeEdgeLengths(model, positions, internal);
+  // stress majorization with the pins held fixed, keeping external legs from
+  // toppling over onto the flow axis.
+  equalizeEdgeLengths(model, positions, internal, legAngleLimits(model, pins));
 
   // --- 4. Scale to px ----------------------------------------------------
   const unit = (edgeLength ?? BASE_EDGE_LEN) * model.options.scale;
@@ -197,13 +198,108 @@ interface StressEdge {
 }
 
 /**
+ * An external leg's angle limit: the leg from `pin` to `inner` may lean at
+ * most MAX_LEG_ANGLE off the flow axis.
+ */
+interface LegLimit {
+  /** The pinned leg end (fixed). */
+  pin: Vec2;
+  /** The internal vertex the leg runs to (movable). */
+  inner: string;
+  /** Unit vector along the flow, pointing from the border into the diagram. */
+  axis: Vec2;
+  /** Unit vector across the flow (`axis` rotated by 90°). */
+  cross: Vec2;
+}
+
+/**
+ * How far an external leg may lean off the flow axis before the relaxation
+ * pulls it back. feynMF's harmonic solution keeps legs comfortably fanned;
+ * the length relaxation can topple them (an out-leg leaving straight up),
+ * which reads as a kink in the line rather than a leg.
+ */
+const MAX_LEG_ANGLE = 60;
+
+/**
+ * Collect the angle limits for the legs pinned to the borders by default.
+ * `at (x, y)` placements are the user's business and get no limit; neither
+ * does a leg whose inner end is itself pinned (nothing left to move).
+ */
+function legAngleLimits(model: DiagramModel, pins: Map<string, Vec2>): LegLimit[] {
+  const axisIsX = model.options.direction === 'right' || model.options.direction === 'left';
+  const limits: LegLimit[] = [];
+  for (const v of model.vertices.values()) {
+    if (!v.external || v.pin) continue;
+    const pin = pins.get(v.id);
+    if (!pin) continue;
+    // Legs sit on x=0/x=1 (or y=0/y=1) of the abstract frame: the flow points
+    // away from whichever border this one is on.
+    const sign = (axisIsX ? pin.x : pin.y) <= 0.5 ? 1 : -1;
+    const axis = axisIsX ? { x: sign, y: 0 } : { x: 0, y: sign };
+    const cross = { x: -axis.y, y: axis.x };
+    for (const e of model.edges) {
+      if (e.from === e.to) continue;
+      const inner = e.from === v.id ? e.to : e.to === v.id ? e.from : undefined;
+      if (inner === undefined || pins.has(inner)) continue;
+      limits.push({ pin, inner, axis, cross });
+    }
+  }
+  return limits;
+}
+
+/**
+ * Rotate every over-leaning leg back to MAX_LEG_ANGLE, keeping its length.
+ * Corrections are averaged per vertex so that a vertex carrying several legs
+ * (and any mirror symmetry between them) is treated evenhandedly.
+ */
+function limitLegAngles(positions: Map<string, Vec2>, limits: LegLimit[]): void {
+  if (limits.length === 0) return;
+  const maxRad = (MAX_LEG_ANGLE * Math.PI) / 180;
+  const cosMax = Math.cos(maxRad);
+  const sinMax = Math.sin(maxRad);
+
+  const targets = new Map<string, { x: number; y: number; n: number }>();
+  for (const { pin, inner, axis, cross } of limits) {
+    const q = positions.get(inner)!;
+    const dx = q.x - pin.x;
+    const dy = q.y - pin.y;
+    const len = Math.hypot(dx, dy);
+    let t = targets.get(inner);
+    if (!t) {
+      t = { x: 0, y: 0, n: 0 };
+      targets.set(inner, t);
+    }
+    t.n++;
+    const along = dx * axis.x + dy * axis.y;
+    if (len < 1e-9 || along >= len * cosMax - 1e-12) {
+      t.x += q.x;
+      t.y += q.y;
+      continue;
+    }
+    // Swing the leg back to the limit, keeping its length and its side of the
+    // axis (a leg pointing straight back gets a deterministic side).
+    const side = dx * cross.x + dy * cross.y < 0 ? -1 : 1;
+    const na = len * cosMax;
+    const nc = len * sinMax * side;
+    t.x += pin.x + na * axis.x + nc * cross.x;
+    t.y += pin.y + na * axis.y + nc * cross.y;
+  }
+  for (const [id, t] of targets) positions.set(id, { x: t.x / t.n, y: t.y / t.n });
+}
+
+/**
  * Stress relaxation: pull every edge chord toward a uniform ideal length.
  * Ideal lengths honor `tension` (lower = longer) and shrink for strongly
  * bent edges (their ink budget lives in the arc, not the chord). Jacobi
  * updates with damping keep the result deterministic and preserve any
  * mirror symmetry of the harmonic starting point.
  */
-function equalizeEdgeLengths(model: DiagramModel, positions: Map<string, Vec2>, internal: string[]): void {
+function equalizeEdgeLengths(
+  model: DiagramModel,
+  positions: Map<string, Vec2>,
+  internal: string[],
+  legLimits: LegLimit[],
+): void {
   if (internal.length === 0) return;
 
   // Collapse parallel edges per unordered pair.
@@ -285,11 +381,11 @@ function equalizeEdgeLengths(model: DiagramModel, positions: Map<string, Vec2>, 
       const ty = sy / sw;
       next.set(id, { x: p.x + DAMP * (tx - p.x), y: p.y + DAMP * (ty - p.y) });
     }
+    const before = new Map(internal.map((id) => [id, positions.get(id)!]));
+    for (const [id, p] of next) positions.set(id, p);
+    limitLegAngles(positions, legLimits);
     let moved = 0;
-    for (const [id, p] of next) {
-      moved = Math.max(moved, dist(p, positions.get(id)!));
-      positions.set(id, p);
-    }
+    for (const [id, p] of before) moved = Math.max(moved, dist(p, positions.get(id)!));
     if (moved < 1e-5 * d0) break;
   }
 }
