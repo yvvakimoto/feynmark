@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gallery — feynmark</title>
+<meta name="description" content="Forty-odd worked feynmark examples: QED trees, propagator styles, QCD and electroweak processes, loops, BSM, vertex types, layout control and diagrams embedded in equations.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="assets/site.css">
+<script defer src="vendor/katex/katex.min.js"></script>
+<script defer src="feynmark.min.js" data-feynmark-no-autoinit></script>
+<style>
+  .layout { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 2.5rem; padding-top: 2rem; }
+  .toc { position: sticky; top: 4.2rem; align-self: start; font-size: 0.86rem; }
+  .toc strong { display: block; color: var(--muted); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.6rem; }
+  .toc a { display: block; padding: 0.22rem 0; color: var(--muted); text-decoration: none; }
+  .toc a:hover { color: var(--fg); }
+
+  .page-head { margin-bottom: 1rem; }
+  .page-head h1 { margin: 0 0 0.3rem; font-size: 1.8rem; }
+  .page-head p { margin: 0; color: var(--muted); max-width: 62ch; }
+
+  h2 { margin-top: 3rem; border-bottom: 1px solid var(--line); padding-bottom: 0.35rem; scroll-margin-top: 4.5rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: 1.5rem; }
+  figure {
+    margin: 0; padding: 1rem; text-align: center;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
+    display: flex; flex-direction: column;
+  }
+  figcaption { font-size: 0.82rem; color: var(--muted); margin-top: 0.6rem; font-family: var(--mono); }
+  .feynmark-container { display: flex; justify-content: center; align-items: center; min-height: 120px; flex-wrap: wrap; gap: 1rem; flex: 1; }
+  .wide { grid-column: 1 / -1; }
+
+  .fig-actions { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.7rem; opacity: 0; transition: opacity 0.12s; }
+  figure:hover .fig-actions, figure:focus-within .fig-actions { opacity: 1; }
+  @media (hover: none) { .fig-actions { opacity: 1; } }
+
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: minmax(0, 1fr); gap: 1.2rem; }
+    .toc { position: static; }
+    .toc a { display: inline-block; margin-right: 0.9rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">feynmark</a>
+  <nav class="site-nav">
+    <a href="index.html">Overview</a>
+    <a href="editor.html">Live editor</a>
+    <a href="gallery.html" aria-current="page">Gallery</a>
+    <a href="https://github.com/yvvakimoto/feynmark">GitHub</a>
+  </nav>
+</header>
+
+<div class="wrap layout">
+  <aside class="toc">
+    <strong>Sections</strong>
+    <a href="#qed">QED tree level</a>
+    <a href="#styles">Propagator styles</a>
+    <a href="#ewk">QCD &amp; electroweak</a>
+    <a href="#loops">One-loop</a>
+    <a href="#multiloop">Multi-loop</a>
+    <a href="#bsm">Beyond the SM</a>
+    <a href="#vertices">Vertex types</a>
+    <a href="#layout">Layout control</a>
+    <a href="#equations">Equation embedding</a>
+  </aside>
+
+  <main>
+    <div class="page-head">
+      <h1>Gallery</h1>
+      <p>
+        Every figure below is rendered in your browser from the source shown when you
+        hover it. Use <em>Open in editor</em> to load any example into the
+        <a href="editor.html">live editor</a> and take it apart.
+      </p>
+    </div>
+
+<h2 id="qed">QED tree level</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram tree {
+  in  e1: $e^-$,  e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a  -- [photon, momentum=$q$] b
+  m2 -- [fermion] b -- [fermion] m1
+}
+</code></pre>
+<figcaption>s-channel: e⁺e⁻ → μ⁺μ⁻</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram compton {
+  in  g1: $\gamma$, e1: $e^-$
+  out g2: $\gamma$, e2: $e^-$
+  g1 -- [photon] a
+  e1 -- [fermion] a -- [fermion] b
+  b -- [photon] g2
+  b -- [fermion] e2
+}
+</code></pre>
+<figcaption>Compton scattering</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram moller {
+  in  a: $e^-$, b: $e^-$
+  out c: $e^-$, d: $e^-$
+  a -- [fermion] v1 -- [fermion] c
+  b -- [fermion] v2 -- [fermion] d
+  v1 -- [photon, tension=2, label=$\gamma$, momentum'=$q$] v2
+}
+</code></pre>
+<figcaption>Møller scattering (t-channel)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram annihilation {
+  in  e1: $e^-$, e2: $e^+$
+  out g1: $\gamma$, g2: $\gamma$
+  e1 -- [fermion] a -- [fermion, tension=2, label=$e$] b -- [fermion] e2
+  a -- [photon] g1
+  b -- [photon] g2
+}
+</code></pre>
+<figcaption>pair annihilation: e⁺e⁻ → γγ</figcaption>
+</figure>
+</div>
+
+<h2 id="styles">Propagator styles</h2>
+<div class="grid">
+<figure><pre><code class="language-feynman">diagram { in a: $e^-$; out b: $e^-$; a -- [fermion, label=$e^-$] b }</code></pre><figcaption>fermion</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [anti fermion, label=$\bar\psi$] b }</code></pre><figcaption>anti fermion</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [photon, label=$\gamma$] b }</code></pre><figcaption>photon</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [gluon, label=$g$] b }</code></pre><figcaption>gluon</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [scalar, label=$\phi$] b }</code></pre><figcaption>scalar</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [charged scalar, label=$\phi^+$] b }</code></pre><figcaption>charged scalar</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [ghost, label=$c$] b }</code></pre><figcaption>ghost</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [boson, label=$W^\pm$] b }</code></pre><figcaption>boson</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [double, label=$\Delta$] b }</code></pre><figcaption>double</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [majorana, label=$\chi$] b }</code></pre><figcaption>majorana</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [anti majorana] b }</code></pre><figcaption>anti majorana</figcaption></figure>
+<figure><pre><code class="language-feynman">diagram { in a; out b; a -- [graviton, label=$h_{\mu\nu}$] b }</code></pre><figcaption>graviton</figcaption></figure>
+</div>
+
+<h2 id="ewk">QCD &amp; electroweak</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram threegluon {
+  in  g1: $g$
+  out g2: $g$, g3: $g$
+  vertex v [dot]
+  g1 -- [gluon] v
+  v -- [gluon] g2
+  v -- [gluon] g3
+}
+</code></pre>
+<figcaption>three-gluon vertex</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram radiation {
+  in  q1: $q$
+  out q2: $q$, g: $g$
+  q1 -- [fermion] v -- [fermion] q2
+  v -- [gluon, label'=$g$] g
+}
+</code></pre>
+<figcaption>gluon radiation: q → q g</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram muondecay {
+  in  m: $\mu^-$
+  out nm: $\nu_\mu$, e: $e^-$, ne: $\bar\nu_e$
+  m -- [fermion] a -- [fermion] nm
+  a -- [boson, label'=$W^-$, tension=0.6] b
+  ne -- [fermion] b -- [fermion] e
+}
+</code></pre>
+<figcaption>muon decay: μ⁻ → ν<sub>μ</sub> e⁻ ν̄<sub>e</sub></figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram betadecay {
+  in  n: $n$
+  out p: $p$, e: $e^-$, ne: $\bar\nu_e$
+  n -- [double, arrow=forward] a -- [double, arrow=forward] p
+  a -- [boson, label'=$W^-$] b
+  ne -- [fermion] b -- [fermion] e
+}
+</code></pre>
+<figcaption>β decay with baryon double lines</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram higgs {
+  in  h: $H$
+  out g1: $\gamma$, g2: $\gamma$
+  h -- [scalar] a
+  a -- [boson, bend left=25, label=$W$, tension=0.7] b
+  b -- [boson, bend left=25, tension=0.7] c
+  c -- [boson, bend left=25, tension=0.7] a
+  b -- [photon] g1
+  c -- [photon] g2
+}
+</code></pre>
+<figcaption>H → γγ via W triangle loop</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram zdecay [direction=down] {
+  in  z: $Z^0$
+  out f1: $f$, f2: $\bar f$
+  z -- [boson] v
+  f2 -- [fermion] v -- [fermion] f1
+}
+</code></pre>
+<figcaption>decay drawn downward (direction=down)</figcaption>
+</figure>
+</div>
+
+<h2 id="loops">One-loop</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram bubble {
+  in  g1: $\gamma$
+  out g2: $\gamma$
+  g1 -- [photon, momentum=$q$] a
+  a -- [fermion, half left, label=$e$, momentum=$k$] b
+  b -- [fermion, half left] a
+  b -- [photon] g2
+}
+</code></pre>
+<figcaption>vacuum polarization</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram selfenergy {
+  in  a: $e^-$
+  out b: $e^-$
+  a -- [fermion] v1 -- [fermion, label'=$e$] v2 -- [fermion] b
+  v1 -- [photon, half left, label=$\gamma$] v2
+}
+</code></pre>
+<figcaption>electron self-energy</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram vertexcorr {
+  in  e1: $e^-$, e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon, label=$\gamma$] b
+  m2 -- [fermion] c -- [fermion] b -- [fermion] d -- [fermion] m1
+  c -- [photon, bend right=60, label'=$\gamma$] d
+}
+</code></pre>
+<figcaption>vertex correction</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram gluonloop {
+  in g1: $g$; out g2: $g$
+  g1 -- [gluon] a
+  a -- [gluon, half left] b
+  b -- [gluon, half left] a
+  b -- [gluon] g2
+}
+</code></pre>
+<figcaption>gluon self-energy (gluon loop)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram quarkloop {
+  in g1: $g$; out g2: $g$
+  g1 -- [gluon] a
+  a -- [fermion, half left, label=$q$] b
+  b -- [fermion, half left] a
+  b -- [gluon] g2
+}
+</code></pre>
+<figcaption>gluon self-energy (quark loop)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram ghostloop {
+  in g1: $g$; out g2: $g$
+  g1 -- [gluon] a
+  a -- [ghost, arrow=forward, half left, label=$c$] b
+  b -- [ghost, arrow=forward, half left] a
+  b -- [gluon] g2
+}
+</code></pre>
+<figcaption>gluon self-energy (ghost loop)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram tadpole {
+  in p: $\phi$
+  p -- [scalar, momentum=$p$] a
+  a -- [scalar, loop=up, label=$\phi$] a
+}
+</code></pre>
+<figcaption>tadpole</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram penguin {
+  in  b: $b$
+  out s: $s$, ph: $\gamma$
+  b  -- [fermion] v1 -- [fermion, label'=$t$] v3
+  v3 -- [fermion, label'=$t$] v2 -- [fermion] s
+  v1 -- [boson, bend left=70, label=$W$, tension=0.35] v2
+  v3 -- [photon] ph
+}
+</code></pre>
+<figcaption>penguin: b → sγ</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram box {
+  in  d: $d$, sb: $\bar s$
+  out s: $s$, db: $\bar d$
+  d  -- [fermion] a -- [fermion, label=$u,c,t$] b -- [fermion] s
+  sb -- [anti fermion] c -- [anti fermion] e -- [anti fermion] db
+  a -- [boson, label'=$W$] c
+  b -- [boson, label=$W$] e
+}
+</code></pre>
+<figcaption>box: K⁰–K̄⁰ mixing</figcaption>
+</figure>
+</div>
+
+<h2 id="multiloop">Multi-loop &amp; multi-leg</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram sunset {
+  in a: $\phi$; out b: $\phi$
+  a -- [scalar] v1; v2 -- [scalar] b
+  v1 -- [scalar, half left, label=$\phi$] v2
+  v1 -- [scalar] v2
+  v1 -- [scalar, half right] v2
+}
+</code></pre>
+<figcaption>two-loop sunset</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram twotadpoles {
+  in p: $\phi$; out q: $\phi$
+  p -- [scalar] a -- [scalar] q
+  a -- [scalar, loop=up] a
+  a -- [scalar, loop=down] a
+}
+</code></pre>
+<figcaption>double tadpole (auto loop directions)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram rainbow {
+  in a: $e^-$; out b: $e^-$
+  a -- [fermion] v1 -- [fermion] v2
+  v2 -- [fermion] v3 -- [fermion] b
+  v1 -- [photon, bend left=75] v3
+  v2 -- [photon, bend left=75] b
+  ...
+}
+</code></pre>
+<figcaption>deliberately invalid — this is how errors are reported</figcaption>
+</figure>
+
+<figure class="wide">
+<pre><code class="language-feynman">
+diagram sixlegs {
+  in  e1: $e^-$, e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$, t1: $\tau^-$, t2: $\tau^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon, label=$\gamma^*$] b
+  m2 -- [fermion] c -- [fermion] b -- [fermion] m1
+  c -- [photon, label'=$\gamma^*$] d
+  t2 -- [fermion] d -- [fermion] t1
+}
+</code></pre>
+<figcaption>2 → 4: e⁺e⁻ → μ⁺μ⁻τ⁺τ⁻ (six external legs)</figcaption>
+</figure>
+</div>
+
+<h2 id="bsm">Beyond the Standard Model</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram susy {
+  in  a: $e^-$, b: $e^-$
+  out c: $\tilde e^-$, d: $\tilde e^-$
+  a -- [fermion] v1 -- [charged scalar] c
+  b -- [fermion] v2 -- [charged scalar] d
+  v1 -- [majorana, tension=2, label=$\tilde\chi^0$] v2
+}
+</code></pre>
+<figcaption>selectron production via neutralino (majorana)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram graviton {
+  in  a: $e^-$, b: $e^-$
+  out c: $e^-$, d: $e^-$
+  a -- [fermion] v1 -- [fermion] c
+  b -- [fermion] v2 -- [fermion] d
+  v1 -- [graviton, tension=2, label=$h_{\mu\nu}$] v2
+}
+</code></pre>
+<figcaption>graviton exchange</figcaption>
+</figure>
+</div>
+
+<h2 id="vertices">Vertex types</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram blobdemo {
+  in a: $e^-$, b: $e^+$
+  out c: $\mu^-$, d: $\mu^+$
+  vertex B [blob]
+  a -- [fermion] B; b -- [anti fermion, arrow=forward] B
+  B -- [fermion] c; B -- [fermion] d
+}
+</code></pre>
+<figcaption>effective blob vertex (hatch)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram shadeblob {
+  in a: $\gamma$; out b: $\gamma$
+  vertex B [blob=shade]
+  a -- [photon] B -- [photon] b
+}
+</code></pre>
+<figcaption>shaded blob</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram counterterm {
+  in a; out b
+  vertex x [cross]
+  a -- [fermion] x -- [fermion] b
+}
+</code></pre>
+<figcaption>counterterm insertion ⊗</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram dots {
+  in a: $\nu$; out b: $\nu$
+  vertex v1 [dot]; vertex v2 [square]
+  a -- [fermion] v1 -- [double, label=$N$] v2 -- [fermion] b
+}
+</code></pre>
+<figcaption>dot / square vertices</figcaption>
+</figure>
+</div>
+
+<h2 id="layout">Layout control</h2>
+<div class="grid">
+<figure>
+<pre><code class="language-feynman">
+diagram manual {
+  in a: $e^-$; out b: $e^-$
+  a -- [fermion] v at (0.5, 0.7) -- [fermion] b
+  v -- [photon, loop=up, label=$\gamma$] v
+}
+</code></pre>
+<figcaption>manual placement: at (x, y)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram tensiondemo {
+  in a: $q$; out b: $q$
+  a -- [fermion] v1 -- [fermion, tension=0.4] v2 -- [fermion] b
+  v1 -- [gluon, half left, label=$g$] v2
+}
+</code></pre>
+<figcaption>tension=0.4 stretches the loop</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram colored {
+  in  q1: $q$, q2: $\bar q$
+  out l1: $\mu^-$, l2: $\mu^+$
+  q1 -- [fermion, color=steelblue] a
+  a -- [fermion, color=steelblue] q2
+  a -- [photon, color="#c2255c", label=$\gamma^*$] b
+  l2 -- [fermion, color=seagreen] b
+  b -- [fermion, color=seagreen] l1
+}
+</code></pre>
+<figcaption>per-edge colors (named or hex)</figcaption>
+</figure>
+
+<figure>
+<pre><code class="language-feynman">
+diagram big [scale=1.4] {
+  in a: $e^-$; out b: $e^-$
+  a -- [fermion] v -- [fermion] b
+  v -- [photon, loop=up, label=$\gamma$] v
+}
+</code></pre>
+<figcaption>scale=1.4 (all metrics scale together)</figcaption>
+</figure>
+</div>
+
+<h2 id="equations">Equation embedding</h2>
+<div class="grid">
+<figure class="wide">
+<pre><code class="language-feynman">
+diagram lo {
+  in  e1: $e^-$, e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon] b
+  m2 -- [fermion] b -- [fermion] m1
+}
+diagram nlo {
+  in  e1: $e^-$, e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon] b
+  m2 -- [fermion] c -- [fermion] b -- [fermion] d -- [fermion] m1
+  c -- [photon, bend right=60, label'=$\gamma$] d
+}
+equation amp {
+  i\mathcal{M}(e^+e^-\to\mu^+\mu^-) = @lo \;+\; @nlo \;+\; \mathcal{O}(\alpha^3)
+}
+</code></pre>
+<figcaption>𝓜 as a sum of diagram terms (KaTeX + inline SVG)</figcaption>
+</figure>
+
+<figure class="wide">
+<pre><code class="language-feynman">
+diagram full {
+  in a: $e^-$; out b: $e^-$
+  vertex B [blob]
+  a -- [fermion] B; B -- [fermion] b
+}
+diagram bare { in a; out b; a -- [fermion] b }
+diagram sigma {
+  in a; out b
+  a -- [fermion] v1 -- [fermion] v2 -- [fermion] b
+  v1 -- [photon, half left] v2
+}
+equation dyson {
+  @full \;=\; @bare \;+\; @sigma \;+\; \cdots
+}
+</code></pre>
+<figcaption>Dyson series: dressed propagator = Σ of insertions</figcaption>
+</figure>
+</div>
+
+  </main>
+</div>
+
+<footer class="site-footer">
+  <a href="https://github.com/yvvakimoto/feynmark">GitHub</a> ·
+  <a href="index.html">Overview</a> ·
+  <a href="editor.html">Live editor</a><br>
+  MIT licensed.
+</footer>
+
+<script>
+// Same encoding as editor.html: #src=<base64url of utf-8>.
+function encodeSource(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decorate(figure, source) {
+  const actions = document.createElement('div');
+  actions.className = 'fig-actions';
+
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'btn btn-sm';
+  copy.textContent = 'Copy source';
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(source);
+      copy.textContent = 'Copied';
+    } catch {
+      copy.textContent = 'Copy failed';
+    }
+    setTimeout(() => { copy.textContent = 'Copy source'; }, 1200);
+  });
+
+  const open = document.createElement('a');
+  open.className = 'btn btn-sm';
+  open.href = 'editor.html#src=' + encodeSource(source);
+  open.textContent = 'Open in editor';
+
+  actions.append(copy, open);
+  figure.appendChild(actions);
+}
+
+window.addEventListener('DOMContentLoaded', function wait() {
+  if (!window.feynmark || !window.katex) return void setTimeout(wait, 40);
+
+  // Capture the sources before run() replaces each <pre> with its rendering.
+  const figures = [...document.querySelectorAll('figure')];
+  const sources = figures.map((figure) => {
+    const code = figure.querySelector('pre > code');
+    return code ? code.textContent.trim() : '';
+  });
+
+  feynmark.run();
+
+  figures.forEach((figure, i) => {
+    if (sources[i]) decorate(figure, sources[i]);
+  });
+});
+</script>
+</body>
+</html>

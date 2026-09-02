@@ -1,0 +1,7 @@
+node_modules/
+dist/
+_site/
+coverage/
+*.log
+.DS_Store
+.claude/

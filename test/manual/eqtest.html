@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>feynmark equation test</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<!-- Manual check: run `npm run build` first, then open this file directly.
+     Verifies that an equation with embedded diagram terms sits on the text
+     baseline and that surrounding prose keeps flowing. -->
+<script defer src="../../dist/feynmark.min.js"></script>
+<style>
+  body { font: 16px/1.6 Georgia, serif; max-width: 900px; margin: 0 auto; padding: 1rem; background: #fff; color: #111; }
+</style>
+</head>
+<body>
+<p>Scattering amplitude as a sum of diagram terms:</p>
+<pre><code class="language-feynman">
+diagram lo {
+  in  e1: $e^-$, e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon] b
+  m2 -- [fermion] b -- [fermion] m1
+}
+diagram nlo {
+  in  e1: $e^-$, e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon] b
+  m2 -- [fermion] c -- [fermion] b -- [fermion] d -- [fermion] m1
+  c -- [photon, bend right=60] d
+}
+equation amp {
+  i\mathcal{M} = @lo \;+\; @nlo \;+\; \mathcal{O}(\alpha^3)
+}
+</code></pre>
+<p>Inline text continues after the equation to verify baseline flow.</p>
+</body>
+</html>

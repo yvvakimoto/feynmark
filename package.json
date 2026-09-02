@@ -1,0 +1,70 @@
+{
+  "name": "feynmark",
+  "version": "0.1.0",
+  "description": "Mermaid-style declarative Feynman diagram renderer for markdown code blocks, with KaTeX labels and diagrams-as-terms in equations.",
+  "keywords": [
+    "feynman",
+    "feynman-diagram",
+    "physics",
+    "diagram",
+    "svg",
+    "katex",
+    "markdown",
+    "mermaid",
+    "quantum-field-theory"
+  ],
+  "license": "MIT",
+  "author": "Yuki Wakimoto (https://github.com/yvvakimoto)",
+  "homepage": "https://yvvakimoto.github.io/feynmark/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yvvakimoto/feynmark.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yvvakimoto/feynmark/issues"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./standalone": "./dist/feynmark.min.js"
+  },
+  "unpkg": "./dist/feynmark.min.js",
+  "jsdelivr": "./dist/feynmark.min.js",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "./dist/feynmark.min.js"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:site": "node scripts/build-site.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "dev": "tsup --watch"
+  },
+  "peerDependencies": {
+    "katex": ">=0.16.0"
+  },
+  "peerDependenciesMeta": {
+    "katex": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/katex": "^0.16.7",
+    "jsdom": "^25.0.0",
+    "katex": "^0.16.11",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>feynmark — declarative Feynman diagrams</title>
+<meta name="description" content="Write a TikZ-Feynman-flavored DSL in a markdown code block; feynmark renders it as publication-quality SVG in the browser, with KaTeX labels and diagrams as terms inside equations.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="assets/site.css">
+<script defer src="vendor/katex/katex.min.js"></script>
+<script defer src="feynmark.min.js" data-feynmark-no-autoinit></script>
+<style>
+  .hero { padding: 4rem 0 2rem; text-align: center; }
+  .hero h1 { font-size: clamp(2.4rem, 7vw, 3.6rem); margin: 0 0 0.4rem; }
+  .hero p.tagline { font-size: clamp(1.05rem, 2.6vw, 1.3rem); color: var(--muted); margin: 0 auto 1.8rem; max-width: 40ch; }
+  .hero .actions { display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; }
+  .hero .facts { margin-top: 1.6rem; color: var(--muted); font-size: 0.85rem; font-family: var(--mono); }
+
+  .hero-figure {
+    margin: 2.5rem auto 0;
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--panel);
+    min-height: 150px;
+  }
+
+  section { margin: 4.5rem 0; }
+  section > h2 { font-size: 1.45rem; margin: 0 0 1.2rem; }
+  section > p.lede { color: var(--muted); margin: -0.6rem 0 1.6rem; max-width: 64ch; }
+
+  .demo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.2rem; align-items: center; margin-bottom: 1.6rem; }
+  .demo-out {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 130px; padding: 1rem;
+    border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel);
+  }
+  @media (max-width: 720px) { .demo { grid-template-columns: 1fr; } }
+
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.2rem; }
+  .feature { padding: 1.1rem 1.2rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
+  .feature h3 { margin: 0 0 0.35rem; font-size: 0.98rem; }
+  .feature p { margin: 0; color: var(--muted); font-size: 0.88rem; }
+
+  .cheats { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+  .cheats h3 { font-size: 0.85rem; margin: 0 0 0.5rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">feynmark</a>
+  <nav class="site-nav">
+    <a href="index.html" aria-current="page">Overview</a>
+    <a href="editor.html">Live editor</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="https://github.com/yvvakimoto/feynmark">GitHub</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+<div class="hero">
+  <h1>feynmark</h1>
+  <p class="tagline">Declarative Feynman diagrams for the web, Mermaid-style.</p>
+  <div class="actions">
+    <a class="btn btn-primary" href="editor.html">Try the live editor</a>
+    <a class="btn" href="gallery.html">Browse the gallery</a>
+    <a class="btn" href="https://github.com/yvvakimoto/feynmark">GitHub</a>
+  </div>
+  <p class="facts">~15 KB gzipped · no runtime dependencies · MIT</p>
+  <div class="hero-figure demo-out" id="hero"></div>
+</div>
+
+<section>
+  <h2>Write the physics, not the coordinates</h2>
+  <p class="lede">
+    A code block holds <code>diagram</code> and <code>equation</code> blocks. External legs are
+    pinned to the borders; internal vertices are placed by minimising Σ&nbsp;tension·|Δp|² —
+    the feynMF algorithm, solved exactly. The same input always produces the same diagram.
+  </p>
+
+  <div class="demo">
+<pre class="code"><code>diagram tree {
+  in  e1: $e^-$,  e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a  -- [photon, momentum=$q$] b
+  m2 -- [fermion] b -- [fermion] m1
+}</code></pre>
+    <div class="demo-out"></div>
+  </div>
+
+  <div class="demo">
+<pre class="code"><code>diagram penguin {
+  in  b: $b$
+  out s: $s$, ph: $\gamma$
+  b  -- [fermion] v1 -- [fermion, label'=$t$] v3
+  v3 -- [fermion, label'=$t$] v2 -- [fermion] s
+  v1 -- [boson, bend left=70, label=$W$, tension=0.35] v2
+  v3 -- [photon] ph
+}</code></pre>
+    <div class="demo-out"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Diagrams as terms inside equations</h2>
+  <p class="lede">
+    Reference a diagram with <code>@name</code> from an <code>equation</code> block and it is
+    typeset as a term, vertically centred on the math axis. Diagrams used this way are
+    re-laid-out compactly, so stroke weights and labels stay full size instead of being
+    shrunk along with the whole figure.
+  </p>
+
+  <div class="demo">
+<pre class="code"><code>diagram lo {
+  in  e1: $e^-$, e2: $e^+$
+  out m1: $\mu^-$, m2: $\mu^+$
+  e1 -- [fermion] a -- [fermion] e2
+  a -- [photon] b
+  m2 -- [fermion] b -- [fermion] m1
+}
+equation amp {
+  i\mathcal{M} = @lo \;+\; \mathcal{O}(\alpha^2)
+}</code></pre>
+    <div class="demo-out"></div>
+  </div>
+</section>
+
+<section>
+  <h2>Why feynmark</h2>
+  <div class="features">
+    <div class="feature">
+      <h3>Zero runtime dependencies</h3>
+      <p>One standalone script tag. KaTeX is an optional peer dependency — without it, labels degrade to plain italic text.</p>
+    </div>
+    <div class="feature">
+      <h3>Deterministic layout</h3>
+      <p>feynMF-style tension minimisation, solved exactly. No physics simulation, no random seeds, no jitter between runs.</p>
+    </div>
+    <div class="feature">
+      <h3>Markdown-native</h3>
+      <p>Scans for <code>pre &gt; code.language-feynman</code> — exactly what a markdown renderer emits for a <code>feynman</code> fenced block.</p>
+    </div>
+    <div class="feature">
+      <h3>Publication-quality SVG</h3>
+      <p>Sine photons, coiled gluons, braided gravitons, momentum arrows, blobs and counterterm crosses, all as clean vector output.</p>
+    </div>
+    <div class="feature">
+      <h3>Escape hatches</h3>
+      <p>When the automatic layout is not what you meant: <code>tension=</code>, <code>bend left/right</code>, <code>half left</code>, or explicit <code>at (x, y)</code>.</p>
+    </div>
+    <div class="feature">
+      <h3>Works everywhere</h3>
+      <p>ESM, CJS and IIFE builds with TypeScript types. <code>render()</code> returns SVG strings without touching the DOM, so server-side rendering works too.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Quick start</h2>
+  <p class="lede">Drop in the script tags and write a <code>feynman</code> code block. feynmark renders every match on <code>DOMContentLoaded</code>.</p>
+<pre class="code"><code>&lt;link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.css"&gt;
+&lt;script defer src="https://cdn.jsdelivr.net/npm/katex@0.16/dist/katex.min.js"&gt;&lt;/script&gt;
+&lt;script defer src="https://cdn.jsdelivr.net/npm/feynmark/dist/feynmark.min.js"&gt;&lt;/script&gt;
+
+&lt;pre&gt;&lt;code class="language-feynman"&gt;
+diagram {
+  in  q: $q$
+  out g: $g$, q2: $q$
+  q -- [fermion] v -- [fermion] q2
+  v -- [gluon] g
+}
+&lt;/code&gt;&lt;/pre&gt;</code></pre>
+  <p class="lede" style="margin-top:1rem">
+    Or from npm: <code>npm install feynmark katex</code>, then
+    <code>import { render, renderInto, initialize, run } from 'feynmark'</code>.
+    The <a href="https://github.com/yvvakimoto/feynmark#readme">README</a> has the full API.
+  </p>
+</section>
+
+<section>
+  <h2>Syntax at a glance</h2>
+  <div class="cheats">
+    <div>
+      <h3>Propagator styles</h3>
+      <table class="spec">
+        <tr><td>fermion</td><td>solid line, mid arrow</td></tr>
+        <tr><td>anti fermion</td><td>solid line, reversed arrow</td></tr>
+        <tr><td>plain</td><td>solid line, no arrow</td></tr>
+        <tr><td>scalar</td><td>dashed</td></tr>
+        <tr><td>charged scalar</td><td>dashed, with arrow</td></tr>
+        <tr><td>ghost</td><td>dotted</td></tr>
+        <tr><td>photon / boson</td><td>sine wave</td></tr>
+        <tr><td>gluon</td><td>coil</td></tr>
+        <tr><td>double</td><td>double line</td></tr>
+        <tr><td>majorana</td><td>double line, opposing arrows</td></tr>
+        <tr><td>graviton</td><td>braided double wave</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>Edge attributes</h3>
+      <table class="spec">
+        <tr><td>label=$..$</td><td>label left of the travel direction (<code>label'</code> = right)</td></tr>
+        <tr><td>momentum=$..$</td><td>momentum arrow (<code>mom dir=back</code> reverses)</td></tr>
+        <tr><td>arrow=…</td><td><code>forward</code> / <code>back</code> / <code>none</code> / <code>both</code></td></tr>
+        <tr><td>bend left=deg</td><td>circular arc, default 30°</td></tr>
+        <tr><td>half left</td><td>90° arc — two of them make a loop</td></tr>
+        <tr><td>loop=up</td><td>tadpole self-loop on <code>a -- a</code></td></tr>
+        <tr><td>tension=n</td><td>layout spring weight (lower = longer)</td></tr>
+        <tr><td>color=…, width=n</td><td>stroke overrides</td></tr>
+      </table>
+      <h3 style="margin-top:1.6rem">Vertices &amp; diagram options</h3>
+      <table class="spec">
+        <tr><td>dot, blob, cross</td><td>vertex marks (<code>blob=shade</code>, cross = counterterm ⊗)</td></tr>
+        <tr><td>at (x, y)</td><td>explicit placement, y-up</td></tr>
+        <tr><td>direction=…</td><td><code>right</code> / <code>left</code> / <code>down</code> / <code>up</code></td></tr>
+        <tr><td>baseline=v</td><td>anchor line used when embedded in an equation</td></tr>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <a href="https://github.com/yvvakimoto/feynmark">GitHub</a> ·
+  <a href="editor.html">Live editor</a> ·
+  <a href="gallery.html">Gallery</a><br>
+  MIT licensed.
+</footer>
+
+<script>
+const HERO = [
+  'diagram hero {',
+  '  in  g1: $g$, g2: $g$',
+  '  out t1: $t$, t2: $\\bar t$',
+  '  g1 -- [gluon] a',
+  '  g2 -- [gluon] b',
+  '  a -- [fermion, label=$t$, tension=1.6] b',
+  '  a -- [fermion] t1',
+  '  b -- [anti fermion] t2',
+  '}',
+].join('\n');
+
+function draw(target, source) {
+  target.textContent = '';
+  try {
+    feynmark.renderInto(target, source);
+  } catch (err) {
+    const box = document.createElement('div');
+    box.className = 'feynmark-error';
+    box.textContent = String((err && err.message) || err);
+    target.appendChild(box);
+  }
+}
+
+function drawAll() {
+  draw(document.getElementById('hero'), HERO);
+  for (const demo of document.querySelectorAll('.demo')) {
+    const code = demo.querySelector('pre.code code');
+    const out = demo.querySelector('.demo-out');
+    if (code && out) draw(out, code.textContent);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', function wait() {
+  // Both scripts are `defer`, so they are usually ready here; poll defensively.
+  if (window.feynmark && window.katex) drawAll();
+  else setTimeout(wait, 40);
+});
+</script>
+</body>
+</html>

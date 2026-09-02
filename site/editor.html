@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live editor — feynmark</title>
+<meta name="description" content="Write feynmark's Feynman-diagram DSL and see the SVG update as you type. Copy or download the result, or share the source as a link.">
+<link rel="stylesheet" href="vendor/katex/katex.min.css">
+<link rel="stylesheet" href="assets/site.css">
+<script defer src="vendor/katex/katex.min.js"></script>
+<script defer src="feynmark.min.js" data-feynmark-no-autoinit></script>
+<style>
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; }
+
+  .toolbar {
+    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+    padding: 0.55rem 1.4rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--panel-2);
+    font-size: 0.85rem;
+  }
+  .toolbar label { color: var(--muted); display: inline-flex; align-items: center; gap: 0.35rem; }
+  .toolbar select, .toolbar input[type="range"] { font: inherit; }
+  .toolbar select {
+    background: var(--panel); color: inherit;
+    border: 1px solid var(--line); border-radius: 6px; padding: 0.25em 0.4em;
+  }
+  .toolbar .spacer { margin-left: auto; }
+  .toolbar output { font-family: var(--mono); min-width: 2.6em; }
+
+  main {
+    flex: 1; min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(300px, 40%) 1fr;
+  }
+
+  .pane-editor { display: flex; flex-direction: column; min-width: 0; border-right: 1px solid var(--line); }
+  #source {
+    flex: 1;
+    font: 13px/1.55 var(--mono);
+    border: none; outline: none; resize: none;
+    padding: 1rem 1.2rem;
+    background: transparent; color: inherit;
+    tab-size: 2;
+  }
+
+  .pane-preview { display: flex; flex-direction: column; min-width: 0; }
+  #preview {
+    flex: 1;
+    padding: 2rem;
+    overflow: auto;
+    display: flex; flex-direction: column;
+    gap: 2rem; align-items: center; justify-content: center;
+  }
+  #errors { border-top: 1px solid var(--line); padding: 0.8rem 1.2rem; }
+  #errors:empty { display: none; }
+  #errors .feynmark-error { margin: 0; }
+
+  .status { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+    background: var(--fg); color: var(--bg); padding: 0.4em 0.9em; border-radius: 999px;
+    font-size: 0.82rem; opacity: 0; transition: opacity 0.15s; pointer-events: none; }
+  .status.show { opacity: 0.92; }
+
+  @media (max-width: 760px) {
+    main { grid-template-columns: 1fr; grid-template-rows: minmax(180px, 40%) 1fr; }
+    .pane-editor { border-right: none; border-bottom: 1px solid var(--line); }
+    #preview { padding: 1.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <a class="brand" href="index.html">feynmark</a>
+  <nav class="site-nav">
+    <a href="index.html">Overview</a>
+    <a href="editor.html" aria-current="page">Live editor</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="https://github.com/yvvakimoto/feynmark">GitHub</a>
+  </nav>
+</header>
+
+<div class="toolbar">
+  <label>Example <select id="examples"></select></label>
+  <label>Scale
+    <input id="scale" type="range" min="0.6" max="2" step="0.1" value="1">
+    <output id="scaleOut">1.0</output>
+  </label>
+  <span class="spacer"></span>
+  <button class="btn btn-sm" id="copyLink" type="button">Copy link</button>
+  <button class="btn btn-sm" id="copySvg" type="button">Copy SVG</button>
+  <button class="btn btn-sm" id="downloadSvg" type="button">Download SVG</button>
+</div>
+
+<main>
+  <div class="pane-editor">
+    <textarea id="source" spellcheck="false" autocapitalize="off" autocorrect="off"
+              aria-label="feynmark source"></textarea>
+  </div>
+  <div class="pane-preview">
+    <div id="preview"></div>
+    <div id="errors" role="status" aria-live="polite"></div>
+  </div>
+</main>
+
+<div class="status" id="status"></div>
+
+<script>
+const EXAMPLES = {
+  'e+e- → μ+μ-': [
+    'diagram tree {',
+    '  in  e1: $e^-$,  e2: $e^+$',
+    '  out m1: $\\mu^-$, m2: $\\mu^+$',
+    '  e1 -- [fermion] a -- [fermion] e2',
+    '  a  -- [photon, momentum=$q$] b',
+    '  m2 -- [fermion] b -- [fermion] m1',
+    '}',
+  ],
+  'Compton scattering': [
+    'diagram compton {',
+    '  in  g1: $\\gamma$, e1: $e^-$',
+    '  out g2: $\\gamma$, e2: $e^-$',
+    '  g1 -- [photon] a',
+    '  e1 -- [fermion] a -- [fermion] b',
+    '  b -- [photon] g2',
+    '  b -- [fermion] e2',
+    '}',
+  ],
+  'vacuum polarization': [
+    'diagram bubble {',
+    '  in  g1: $\\gamma$',
+    '  out g2: $\\gamma$',
+    '  g1 -- [photon, momentum=$q$] a',
+    '  a -- [fermion, half left, label=$e$, momentum=$k$] b',
+    '  b -- [fermion, half left] a',
+    '  b -- [photon] g2',
+    '}',
+  ],
+  'tadpole': [
+    'diagram tadpole {',
+    '  in p: $\\phi$',
+    '  p -- [scalar, momentum=$p$] a',
+    '  a -- [scalar, loop=up, label=$\\phi$] a',
+    '}',
+  ],
+  'muon decay': [
+    'diagram muondecay {',
+    '  in  m: $\\mu^-$',
+    '  out nm: $\\nu_\\mu$, e: $e^-$, ne: $\\bar\\nu_e$',
+    '  m -- [fermion] a -- [fermion] nm',
+    "  a -- [boson, label'=$W^-$, tension=0.6] b",
+    '  ne -- [fermion] b -- [fermion] e',
+    '}',
+  ],
+  'penguin': [
+    'diagram penguin {',
+    '  in  b: $b$',
+    '  out s: $s$, ph: $\\gamma$',
+    "  b  -- [fermion] v1 -- [fermion, label'=$t$] v3",
+    "  v3 -- [fermion, label'=$t$] v2 -- [fermion] s",
+    '  v1 -- [boson, bend left=70, label=$W$, tension=0.35] v2',
+    '  v3 -- [photon] ph',
+    '}',
+  ],
+  'gluon splitting': [
+    'diagram gg {',
+    '  in  g1: $g$, g2: $g$',
+    '  out g3: $g$, g4: $g$',
+    '  g1 -- [gluon] a -- [gluon] g3',
+    '  g2 -- [gluon] b -- [gluon] g4',
+    '  a -- [gluon, tension=2] b',
+    '}',
+  ],
+  'counterterm': [
+    'diagram ct {',
+    '  in  e1: $e^-$',
+    '  out e2: $e^-$',
+    '  vertex x [cross]',
+    '  e1 -- [fermion] x -- [fermion] e2',
+    '}',
+  ],
+  'colored': [
+    'diagram colored {',
+    '  in  q1: $q$, q2: $\\bar q$',
+    '  out l1: $\\mu^-$, l2: $\\mu^+$',
+    '  q1 -- [fermion, color=steelblue] a',
+    '  a -- [fermion, color=steelblue] q2',
+    '  a -- [photon, color="#c2255c", label=$\\gamma^*$] b',
+    '  l2 -- [fermion, color=seagreen] b',
+    '  b -- [fermion, color=seagreen] l1',
+    '}',
+  ],
+  'amplitude equation': [
+    'diagram lo {',
+    '  in  e1: $e^-$, e2: $e^+$',
+    '  out m1: $\\mu^-$, m2: $\\mu^+$',
+    '  e1 -- [fermion] a -- [fermion] e2',
+    '  a -- [photon] b',
+    '  m2 -- [fermion] b -- [fermion] m1',
+    '}',
+    'equation amp {',
+    '  i\\mathcal{M} = @lo \\;+\\; \\mathcal{O}(\\alpha^2)',
+    '}',
+  ],
+};
+for (const key of Object.keys(EXAMPLES)) EXAMPLES[key] = EXAMPLES[key].join('\n');
+
+const DEFAULT_EXAMPLE = 'e+e- → μ+μ-';
+
+const source = document.getElementById('source');
+const preview = document.getElementById('preview');
+const errors = document.getElementById('errors');
+const examples = document.getElementById('examples');
+const scale = document.getElementById('scale');
+const scaleOut = document.getElementById('scaleOut');
+const statusEl = document.getElementById('status');
+
+/* --- share links: #src=<base64url of utf-8> ---------------------------- */
+
+function encodeSource(text) {
+  const bytes = new TextEncoder().encode(text);
+  let binary = '';
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decodeSource(encoded) {
+  let b64 = encoded.replace(/-/g, '+').replace(/_/g, '/');
+  b64 += '='.repeat((4 - (b64.length % 4)) % 4);
+  const binary = atob(b64);
+  const bytes = Uint8Array.from(binary, (ch) => ch.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
+function sourceFromHash() {
+  const match = /(?:^|[#&])src=([^&]+)/.exec(location.hash);
+  if (!match) return undefined;
+  try {
+    return decodeSource(match[1]);
+  } catch {
+    return undefined;
+  }
+}
+
+/* --- rendering ---------------------------------------------------------- */
+
+function toast(message) {
+  statusEl.textContent = message;
+  statusEl.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => statusEl.classList.remove('show'), 1400);
+}
+
+function showError(err) {
+  const box = document.createElement('div');
+  box.className = 'feynmark-error';
+  let text = 'feynmark: ' + String((err && err.message) || err);
+  const excerpt = err && typeof err.excerpt === 'function' ? err.excerpt() : undefined;
+  if (excerpt) text += '\n\n' + excerpt;
+  box.textContent = text;
+  errors.appendChild(box);
+}
+
+function update() {
+  if (!window.feynmark) return;
+  preview.textContent = '';
+  errors.textContent = '';
+  feynmark.initialize({ scale: Number(scale.value) });
+  try {
+    feynmark.renderInto(preview, source.value);
+  } catch (err) {
+    showError(err);
+  }
+}
+
+let debounce;
+function scheduleUpdate() {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => {
+    syncExampleSelect(source.value);
+    update();
+    // Keep the address bar shareable without adding a history entry per keystroke.
+    history.replaceState(null, '', '#src=' + encodeSource(source.value));
+  }, 250);
+}
+
+function load(text, { silent = false } = {}) {
+  source.value = text;
+  syncExampleSelect(text);
+  update();
+  if (!silent) history.replaceState(null, '', '#src=' + encodeSource(text));
+}
+
+/* --- SVG export --------------------------------------------------------- */
+
+function currentSvg() {
+  const svg = preview.querySelector('svg');
+  if (!svg) return undefined;
+  return new XMLSerializer().serializeToString(svg);
+}
+
+/* --- wiring ------------------------------------------------------------- */
+
+for (const name of Object.keys(EXAMPLES)) {
+  const option = document.createElement('option');
+  option.textContent = name;
+  examples.appendChild(option);
+}
+
+// Shown when the source is no longer one of the examples (edited, or shared).
+const CUSTOM = '(custom)';
+const customOption = document.createElement('option');
+customOption.textContent = CUSTOM;
+customOption.hidden = true;
+examples.appendChild(customOption);
+
+function syncExampleSelect(text) {
+  const match = Object.keys(EXAMPLES).find((name) => EXAMPLES[name] === text);
+  examples.value = match ?? CUSTOM;
+}
+
+examples.addEventListener('change', () => {
+  if (examples.value !== CUSTOM) load(EXAMPLES[examples.value]);
+});
+source.addEventListener('input', scheduleUpdate);
+
+scale.addEventListener('input', () => {
+  scaleOut.textContent = Number(scale.value).toFixed(1);
+  update();
+});
+
+// Tab indents instead of leaving the textarea — this is a code editor.
+source.addEventListener('keydown', (event) => {
+  if (event.key !== 'Tab' || event.shiftKey) return;
+  event.preventDefault();
+  const { selectionStart: start, selectionEnd: end, value } = source;
+  source.value = value.slice(0, start) + '  ' + value.slice(end);
+  source.selectionStart = source.selectionEnd = start + 2;
+  scheduleUpdate();
+});
+
+document.getElementById('copyLink').addEventListener('click', async () => {
+  const url = location.origin + location.pathname + '#src=' + encodeSource(source.value);
+  try {
+    await navigator.clipboard.writeText(url);
+    toast('Link copied');
+  } catch {
+    toast('Copy failed — the URL bar already holds the link');
+  }
+});
+
+document.getElementById('copySvg').addEventListener('click', async () => {
+  const svg = currentSvg();
+  if (!svg) return toast('Nothing to copy');
+  try {
+    await navigator.clipboard.writeText(svg);
+    toast('SVG copied');
+  } catch {
+    toast('Copy failed');
+  }
+});
+
+document.getElementById('downloadSvg').addEventListener('click', () => {
+  const svg = currentSvg();
+  if (!svg) return toast('Nothing to download');
+  const blob = new Blob([svg], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'feynmark.svg';
+  link.click();
+  URL.revokeObjectURL(url);
+});
+
+window.addEventListener('hashchange', () => {
+  const shared = sourceFromHash();
+  if (shared !== undefined && shared !== source.value) load(shared, { silent: true });
+});
+
+window.addEventListener('DOMContentLoaded', function wait() {
+  if (!window.feynmark || !window.katex) return void setTimeout(wait, 40);
+  const shared = sourceFromHash();
+  load(shared !== undefined ? shared : EXAMPLES[DEFAULT_EXAMPLE], { silent: shared !== undefined });
+});
+</script>
+</body>
+</html>
